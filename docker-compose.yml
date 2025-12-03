@@ -1,0 +1,52 @@
+services:
+  # 1. MongoDB Service
+  mongodb:
+    image: mongo:4.4.29-focal
+    container_name: ovvl_mongodb
+    # Map the MongoDB data directory to a volume for persistence
+    volumes:
+      - mongodb_data:/data/db
+    # Expose the default MongoDB port (optional, but useful for testing)
+    ports:
+      - "27017:27017"
+    # Set a root user/password for security
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-example}
+    # Health check to ensure Mongo is ready before the app tries to connect
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.runCommand({ping: 1})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Application Service
+  ovvl-app:
+    # Build the service from the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Pass the required build arguments from your shell environment
+      args:
+        mongoConnection: mongodb://mongodb:27017/ovvldb # Internal connection string
+        jwtSecret: ${OVVL_JWT_SECRET}
+        supportMail: ${SUPPORT_MAIL_SENDER}
+        supportMailPW: ${SUPPORT_MAIL_SENDER_PW}
+        supportMailReceiver: ${SUPPORT_MAIL_RECEIVER}
+    
+    container_name: ovvl_application
+    ports:
+      - "8080:8080" 
+    # Wait for the MongoDB service to be healthy before starting the app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    
+    # Environment variables for runtime configuration
+    environment:
+      # Use the user/password set in the mongodb service
+      MONGODB_USER: ${MONGO_ROOT_USER:-root}
+      MONGODB_PASS: ${MONGO_ROOT_PASSWORD:-example}
+
+volumes:
+  mongodb_data:

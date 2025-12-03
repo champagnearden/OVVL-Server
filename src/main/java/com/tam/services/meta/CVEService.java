@@ -80,7 +80,7 @@ public class CVEService {
 
     private List<String> getNVDFileSpecifications() {
         List<String> fileSpecifications = new ArrayList<>();
-        Collections.addAll(fileSpecifications, "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "modified");
+         Collections.addAll(fileSpecifications, "##YEARS##");
         return fileSpecifications;
     }
 
@@ -88,7 +88,7 @@ public class CVEService {
                                                                       String fileSpecification,
                                                                       List<CVEResource> alreadyMappedCVEs) {
         TypeReference<NVDCVEJson> typeReference = new TypeReference<NVDCVEJson>(){};
-        InputStream inputStream = TypeReference.class.getResourceAsStream("/nvdcve-1.0-" +  fileSpecification + ".json");
+        InputStream inputStream = TypeReference.class.getResourceAsStream("/nvdcve-2.0-" +  fileSpecification + ".json");
         try {
             // 1. Parse the JSON containing the CVE data and map it to the NVDCVEJson data structure
             NVDCVEJson nvdcveJson = mapper.readValue(inputStream, typeReference);
